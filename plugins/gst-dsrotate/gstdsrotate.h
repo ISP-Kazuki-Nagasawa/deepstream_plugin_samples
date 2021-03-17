@@ -82,8 +82,7 @@ struct _GstDsRotate
   // GPU ID on which we expect to execute the task
   guint gpu_id;
 
-  VideoRotator* rotator_outer = nullptr;
-  VideoRotator* rotator_inner = nullptr;
+  // Rotator
   VideoRotator* rotator = nullptr;
 
 };
