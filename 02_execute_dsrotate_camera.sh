@@ -4,5 +4,5 @@ gst-launch-1.0 \
     nvvideoconvert ! 'video/x-raw(memory:NVMM), format=RGBA' ! \
     m.sink_0 nvstreammux name=m width=640 height=480 batch_size=1 \
     ! nvvideoconvert ! 'video/x-raw(memory:NVMM), format=RGBA' ! \
-    dsrotate ! \
+    dsrotate divide-count=6 ! \
     nvegltransform ! nveglglessink sync=0

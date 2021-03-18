@@ -39,7 +39,8 @@ enum
 {
   PROP_0,
   PROP_UNIQUE_ID,
-  PROP_GPU_DEVICE_ID
+  PROP_GPU_DEVICE_ID,
+  PROP_DIVIDE_COUNT
 };
 
 #define CHECK_NVDS_MEMORY_AND_GPUID(object, surface)  \
@@ -61,6 +62,7 @@ enum
 /* Default values for properties */
 #define DEFAULT_UNIQUE_ID 15
 #define DEFAULT_GPU_ID 0
+#define DEFAULT_DIVIDE_COUNT 1
 
 #define CHECK_NPP_STATUS(npp_status,error_str) do { \
   if ((npp_status) != NPP_SUCCESS) { \
@@ -160,6 +162,15 @@ gst_dsrotate_class_init (GstDsRotateClass * klass)
           (G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY)));
 
+  g_object_class_install_property (gobject_class, PROP_DIVIDE_COUNT,
+      g_param_spec_uint ("divide-count",
+          "Set rotation divide count",
+          "Set rotation divide count", 
+          1, G_MAXUINT, DEFAULT_DIVIDE_COUNT, 
+          GParamFlags
+          (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY)));
+
   /* Set sink and src pad capabilities */
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_dsrotate_src_template));
@@ -190,6 +201,7 @@ gst_dsrotate_init (GstDsRotate * dsrotate)
   /* Initialize all property variables to default values */
   dsrotate->unique_id = DEFAULT_UNIQUE_ID;
   dsrotate->gpu_id = DEFAULT_GPU_ID;
+  dsrotate->divide_count = DEFAULT_DIVIDE_COUNT;
   /* This quark is required to identify NvDsMeta when iterating through
    * the buffer metadatas */
   if (!_dsmeta_quark)
@@ -209,6 +221,9 @@ gst_dsrotate_set_property (GObject * object, guint prop_id,
       break;
     case PROP_GPU_DEVICE_ID:
       dsrotate->gpu_id = g_value_get_uint (value);
+      break;
+    case PROP_DIVIDE_COUNT:
+      dsrotate->divide_count = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -231,6 +246,9 @@ gst_dsrotate_get_property (GObject * object, guint prop_id,
       break;
     case PROP_GPU_DEVICE_ID:
       g_value_set_uint (value, dsrotate->gpu_id);
+      break;
+    case PROP_DIVIDE_COUNT:
+      g_value_set_uint (value, dsrotate->divide_count);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -379,8 +397,7 @@ gst_dsrotate_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
 
       // Video rotator
       if (dsrotate->rotator == nullptr) {
-        int divide_count = 8;
-        dsrotate->rotator = new VideoRotator(width, height, divide_count);
+        dsrotate->rotator = new VideoRotator(width, height, dsrotate->divide_count);
       }
       dsrotate->rotator->rotate(in_mat);
 
